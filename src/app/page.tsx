@@ -1,116 +1,192 @@
 "use client"
-import Image from "next/image"
-import { useEffect, useRef, useState } from "react"
-import { createSwapy } from "swapy"
+import {
+	ResizableHandle,
+	ResizablePanel,
+	ResizablePanelGroup,
+} from "@/components/ui/resizable"
+import { Grid } from "lucide-react"
+import React, { useState } from "react"
+import ReactDOMServer from "react-dom/server"
+import pretty from "pretty"
+import { codepen, CopyBlock } from "react-code-blocks"
+type Grid = number | number[] | Grid[]
 
-type Child = {
-	col: number
-	colSpan?: number
-	row: number
-	rowSpan?: number
+function KeyFrag({ children }: { children: React.ReactNode }) {
+	return <>{children}</>
 }
 
-export default function Home() {
-	const [columns, setColumns] = useState<number>(3)
-	const [rows, setRows] = useState<number>(3)
-	const [children, setChildren] = useState<number>(0)
-	const swapyContainerRef = useRef<HTMLDivElement>(null)
+export default function Page() {
+	const [grid, setGrid] = useState<Grid[]>([0])
+	const [elements, setElements] = useState<Record<string, number>>({})
 
-	const gridCols = `grid-cols-[repeat(${columns},1fr)]`
-	const gridRows = `grid-rows-[repeat(${rows},1fr)]`
+	function getElement({ path }: { path: number[] }) {
+		return path.reduce((prev, current) => {
+			return prev[current] as Grid[]
+		}, grid as Grid[])
+	}
 
-	// useEffect(() => {
-	// 	if (swapyContainerRef.current) {
-	// 		const swapy = createSwapy(swapyContainerRef.current, {
-	// 			animation: "dynamic",
-	// 		})
-	// 		swapy.enable(true)
-	// 	}
-	// }, [columns, children])
+	function setElement({ path, element }: { path: number[]; element: Grid }) {
+		const newArray = JSON.parse(JSON.stringify(grid))
+		// Navigate to the parent of the target element
+		const lastIndex = path.pop()
+		const parent = path.reduce((current, index) => current[index], newArray)
+		if (!lastIndex && lastIndex !== 0) {
+			return
+		}
+		// Set the new value
+		parent[lastIndex] = element
+		setGrid(newArray)
+	}
+
+	function expand({ path }: { path: number[] }) {
+		let element = getElement({ path })
+
+		if (!path.length) {
+			setGrid((prev) => [...prev, 0])
+			return
+		}
+		if (Array.isArray(element)) {
+			element.push(0)
+		} else {
+			element = [0, 0]
+		}
+		setElement({ path, element })
+	}
+
+	function onResize(e: number, path: number[]) {
+		setElements((prev) => ({
+			...prev,
+			[path.join("")]: e,
+		}))
+	}
+
+	function renderItems({
+		col,
+		path,
+		isLast,
+	}: {
+		col: Grid
+		path: number[]
+		isLast?: boolean
+	}) {
+		return Array.isArray(col) ? (
+			<>
+				<ResizablePanel
+					onResize={(e) => onResize(e, path)}
+					className="bg-transparent"
+				>
+					<ResizablePanelGroup
+						direction={
+							path.length % 2 === 0 ? "horizontal" : "vertical"
+						}
+					>
+						{col.map((row, rIdx) => (
+							<KeyFrag key={rIdx}>
+								{renderItems({
+									col: row,
+									path: [...path, rIdx],
+									isLast: rIdx === col.length - 1,
+								})}
+							</KeyFrag>
+						))}
+					</ResizablePanelGroup>
+				</ResizablePanel>
+				{!isLast && <ResizableHandle />}
+			</>
+		) : (
+			<>
+				<ResizablePanel onResize={(e) => onResize(e, path)}>
+					<button
+						onClick={() =>
+							expand({ path: path.slice(0, path.length - 1) })
+						}
+					>
+						Sibling
+					</button>
+					<button onClick={() => expand({ path })}>Split</button>
+				</ResizablePanel>
+				{!isLast && <ResizableHandle />}
+			</>
+		)
+	}
+
+	const renderGrid = (grid: Grid, path: number[]) => {
+		const isCol = path.length % 2 === 1
+		const p = path.join("")
+		return (
+			<div
+				className="conditionCard | has-[.conditionCard]:contents lg:has-[.conditionCard]:flex | [&:not(:has(.conditionCard))]:border-4 [&:not(:has(.conditionCard))]:p-2 | gap-4 h-full w-full flex rounded-2xl text-center justify-center items-center"
+				style={
+					isCol
+						? {
+								flexDirection: "column",
+								flexBasis: `${elements[p]}%`,
+						  }
+						: {
+								flexBasis: `${elements[p]}%`,
+						  }
+				}
+			>
+				{Array.isArray(grid)
+					? grid.map((g, i) => (
+							<KeyFrag key={i}>
+								{renderGrid(g, [...path, i])}
+							</KeyFrag>
+					  ))
+					: p}
+			</div>
+		)
+	}
+
+	const copyBlockProps = {
+		text: pretty(`<div className="bentoWrapper | w-full max-w-screen-2xl aspect-video grid gap-4 overflow-auto">
+								${ReactDOMServer.renderToString(renderGrid(grid, [])).replaceAll(
+									"class",
+									"className"
+								)}
+							</div>`),
+		theme: codepen,
+		language: "html",
+		showLineNumbers: true,
+		startingLineNumber: 1,
+		wrapLines: false,
+		wrapLongLines: false,
+	}
 
 	return (
-		<div className="pageWrapper | min-h-svh grid grid-rows-[auto_1fr_auto] place-items-center">
-			<header className="">
-				<h1 className="text-6xl font-semibold">Bento Case</h1>
-			</header>
-			<main className="w-full">
-				<div className="text-xl font-medium flex gap-4 justify-center">
-					<div className="inline-flex items-center gap-1">
-						<p>Columns: </p>
-						<div className="flex gap-2">
-							<button
-								onClick={() =>
-									setColumns(() =>
-										columns ? columns - 1 : columns
-									)
-								}
-							>
-								-
-							</button>
-							<span>{columns}</span>
-							<button onClick={() => setColumns(columns + 1)}>
-								+
-							</button>
-						</div>
-					</div>
-					<div className="inline-flex items-center gap-1">
-						<p>Rows: </p>
-						<div className="flex gap-2">
-							<button
-								onClick={() =>
-									setRows(() => (rows ? rows - 1 : rows))
-								}
-							>
-								-
-							</button>
-							<span>{rows}</span>
-							<button onClick={() => setRows(rows + 1)}>+</button>
-						</div>
-					</div>
-					<div className="inline-flex items-center gap-1">
-						<p>Children: </p>
-						<div className="flex gap-2">
-							<button
-								onClick={() =>
-									setChildren(() =>
-										children ? children - 1 : children
-									)
-								}
-							>
-								-
-							</button>
-							<span>{children}</span>
-							<button onClick={() => setChildren(children + 1)}>
-								+
-							</button>
-						</div>
-					</div>
+		<>
+			<section className="min-h-svh grid place-items-center">
+				<div className="max-w-screen-2xl w-full aspect-video resize-y overflow-auto">
+					<ResizablePanelGroup direction="horizontal">
+						{grid.map((col, cIdx) => (
+							<KeyFrag key={cIdx}>
+								{renderItems({
+									col,
+									path: [cIdx],
+									isLast: cIdx == grid.length - 1,
+								})}
+							</KeyFrag>
+						))}
+					</ResizablePanelGroup>
 				</div>
-				<section
-					ref={swapyContainerRef}
-					className={`swapyContainer | grid ${gridCols} gap-6 p-4 auto-rows-[1fr] ~grid-cols-[repeat(2,1fr)] max-w-[1366px] mx-auto min-h-[768px] bg-white/5 rounded-3xl`}
-					style={{
-						gridTemplateColumns: `repeat(${columns}, 1fr)`,
+			</section>
+			<section className="min-h-svh grid place-items-center p-4">
+				<div className="bentoWrapper | w-full max-w-screen-2xl aspect-video grid gap-4 resize-y overflow-auto">
+					{renderGrid(grid, [])}
+				</div>
+			</section>
+			<section className="min-h-svh grid place-items-center p-4">
+				{/* <div className="w-full overflow-x-auto bg-[#222]"> */}
+				<CopyBlock
+					{...copyBlockProps}
+					customStyle={{
+						width: "100%",
+						overflowX: "auto",
+						display: "grid",
 					}}
-				>
-					{Array.from({ length: rows * columns }).map((_, index) => (
-						<div
-							className="border-2 border-dashed rounded-lg grid place-items-center"
-							key={index}
-							// data-swapy-slot={`slot-${index + 1}`}
-						>
-							<button className="text-3xl font-bold">+</button>
-							{/* <div
-								data-swapy-item={`item-${index + 1}`}
-								className="w-full h-full grid place-items-center hover:cursor-grab active:cursor-grabbing bg-gradient-to-b from-[#E4DED8] to-[#7E7B77] rounded-[inherit] text-2xl font-bold text-background"
-							>
-								{index + 1}
-							</div> */}
-						</div>
-					))}
-				</section>
-			</main>
-			<footer></footer>
-		</div>
+				/>
+				{/* </div> */}
+			</section>
+		</>
 	)
 }

@@ -27,3 +27,13 @@ body {
 		--radius: 0.5rem;
 	}
 }
+
+.conditionCard:has(.conditionCard) {
+	@media (width < 1024px) {
+		display: contents;
+	}
+}
+
+.dPpnnH {
+	background-color: hsl(0 0% 100% / 0.25);
+}
