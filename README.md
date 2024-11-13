@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BentoCase
 
-## Getting Started
+BentoCase is a flexible, interactive bento grid maker that allows you to create and resize customizable grid layouts using resizable components. Powered by [shadcn](https://github.com/shadcn) and integrated with [react-code-blocks](https://github.com/rajinwonderland/react-code-blocks), BentoCase supports dynamic grid structures that can be expanded or split at any level, giving users complete control over grid design and content.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Resizable Grid Panels**: Use shadcn’s resizable component to create panels that adapt to user-specified dimensions.
+- **Dynamic Grid Expansion**: Expand or split grid sections with intuitive sibling and split buttons.
+- **Auto-generated Grid Preview**: Live preview of the grid structure generated as clean, formatted HTML code.
+- **Code Export**: Copy the rendered grid structure as formatted HTML using `pretty` and `react-code-blocks`.
+- **Flexible Directions**: Supports horizontal and vertical resizing to create diverse layouts.
+
+## Project Structure
+
+The code organizes the grid-making functionality into three main parts:
+- **ResizablePanelGroup and ResizablePanel**: Core components for creating resizable areas in the grid.
+- **Dynamic Expansion**: Functions to expand and manage nested grid elements.
+- **Code Export**: Generates a formatted HTML preview that users can copy for integration into other projects.
+
+## Usage
+
+To use BentoCase, run the following commands to set up the environment:
+
+1. **Clone the Repository**:
+    ```bash
+    git clone https://github.com/yourusername/bentocase.git
+    cd bentocase
+    ```
+
+2. **Install Dependencies**:
+    ```bash
+    npm install
+    ```
+
+3. **Run the App**:
+    ```bash
+    npm run dev
+    ```
+
+Access the app at `http://localhost:3000` and start creating your grid layout. Use the buttons within each grid panel to add new sections or split existing ones.
+
+## Components Breakdown
+
+### `ResizablePanelGroup`
+Defines the direction of the grid layout and handles resizing events across the layout. Uses either horizontal or vertical resizing based on the panel index.
+
+### `renderItems` & `renderGrid`
+Recursively renders each grid element, creating new sub-panels as elements expand. The components also include resize handles to adjust panel size.
+
+### `CopyBlock`
+Displays formatted HTML of the current grid layout, making it easy to copy the code into other applications.
+
+## Example Code Output
+
+Here’s an example of the generated code block for the current grid layout:
+
+```html
+<div class="bentoWrapper | w-full max-w-screen-2xl aspect-video grid gap-4 overflow-auto">
+    <!-- Rendered Grid Layout Here -->
+</div>
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **NextJS**: For building the UI components.
+- **shadcn Resizable**: For creating responsive, resizable grid panels.
+- **React Code Blocks**: To format and export grid layout code as HTML.
+- **Pretty**: To prettify HTML code for easy copy-pasting.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Contributing
 
-## Learn More
+Contributions are welcome! Feel free to submit issues or pull requests. 
 
-To learn more about Next.js, take a look at the following resources:
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+--- 
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Let me know if there are other sections you'd like to add!
